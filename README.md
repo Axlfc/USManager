@@ -1,149 +1,137 @@
-# Unified Stack Manager
+# Unified Stack Manager (USM)
 
-Unified Stack Manager is a versatile command-line tool designed to streamline the setup and management of local development environments. It provides specialized managers for both Windows (WAMP) and Linux (LAMP) stacks, with a future-proof architecture aimed at unifying a shared core.
+Unified Stack Manager (USM) is a versatile command-line tool designed to streamline the setup and management of local development environments for Drupal. It provides a unified interface for both Windows (WAMP) and Linux (LAMP) stacks, automating repetitive tasks and ensuring consistency across platforms.
 
-This tool is ideal for developers and system administrators who need to rapidly provision, configure, and manage web servers for applications like Drupal, WordPress, or other PHP-based projects.
+This tool is ideal for developers and system administrators who need to rapidly provision, configure, and manage web servers for Drupal projects.
 
-## Project Structure
+## Features
 
-The project is organized into two main components:
-
--   `lamp_manager/`: A modern, robust manager for Debian-based Linux systems (Ubuntu, Debian).
--   `wamp_manager/`: The legacy manager for Windows environments.
-
-The long-term vision is to merge the common logic into a shared `core/` directory, providing a single, cross-platform interface.
-
----
-
-## LAMP Manager (Linux)
-
-The **LAMP Manager** is a powerful and safe tool for automating the installation and configuration of a LAMP (Linux, Apache, MySQL, PHP) stack on Debian-based systems. It is designed with production-ready features like robust validation, atomic operations with rollbacks, and a mandatory dry-run mode.
-
-### Features
-
+-   **Cross-Platform**: Works on both Debian-based Linux (Ubuntu, Debian) and Windows.
 -   **Full Stack Installation**: Installs Apache, MySQL/MariaDB, and multiple PHP versions.
--   **Multi-PHP Support**: Leverages the `ppa:ondrej/php` repository to install a wide range of PHP versions.
--   **Automated Site Creation**: Creates Apache virtual hosts, document root directories, and MySQL databases/users with a single command.
--   **Secure by Default**: Automatically generates strong, random passwords for database users.
+-   **Automated Drupal Site Creation**: Creates Apache virtual hosts, databases, and installs Drupal with a single command.
+-   **Multi-PHP Support**: Easily switch between different PHP versions for your projects.
 -   **Safety First**:
-    -   **Pre-execution Validation**: Checks for root permissions, disk space, and internet connectivity.
+    -   **Pre-execution Validation**: Checks for administrator/root permissions.
     -   **Dry-Run Mode**: Preview all changes before they are made.
-    -   **User Confirmation**: Requires explicit user approval for all system-modifying operations.
-    -   **Atomic Operations**: Uses a rollback manager to revert file changes if an operation fails, preventing inconsistent states.
 -   **Configuration Driven**: Uses a central YAML file for configuration to avoid hardcoded values.
--   **Audit Logging**: Logs all actions for traceability and compliance.
+-   **Audit Logging**: Logs all actions for traceability.
 
-### Requirements
+## Requirements
 
--   **Operating System**: Debian-based Linux (e.g., Ubuntu 22.04 LTS).
--   **Permissions**: `sudo` / root access.
+-   **Operating System**:
+    -   Debian-based Linux (e.g., Ubuntu 22.04 LTS)
+    -   Windows 10/11
+-   **Permissions**: `sudo` / Administrator access.
 -   **Python**: Python 3.8+
--   **Dependencies**: `PyYAML`
 
-### Usage Instructions
+## Installation
 
-#### 1. Setup
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/dane-dc/unified-stack-manager.git
+    cd unified-stack-manager
+    ```
 
-First, install the required Python dependency.
+2.  **Install the package in editable mode:**
+    This will install the necessary dependencies and make the `usm` command available in your terminal.
+    ```bash
+    pip install -e .
+    ```
+    On Linux, you might need to use `sudo`:
+    ```bash
+    sudo pip install -e .
+    ```
 
+## Usage
+
+The main command is `usm`. You can see a list of all available commands by running:
 ```bash
-# Navigate to the repository root
-sudo pip install -r requirements.txt
+usm --help
 ```
 
-#### 2. Test Stack Installation (`--install-stack`)
+### Global Options
 
-This command provisions the complete LAMP stack.
+-   `--dry-run`: Simulate the command without making any changes to the system.
+-   `--config FILE`: Use a custom configuration file.
+-   `--verbose` or `-v`: Enable detailed output, useful for debugging.
 
-**A. Perform a Dry Run (Recommended First)**
+---
 
-A dry run will show you what the script *would* do without making any actual changes to your system.
+### Commands
 
+#### `install`
+Installs stack components.
+
+**Usage:**
 ```bash
-# Execute a dry run to install the stack with PHP 8.2
-sudo python3 lamp_manager/cli.py --install-stack 8.2 --dry-run
+usm install [OPTIONS] [COMPONENTS]...
 ```
 
-**B. Execute the Real Installation**
+**Components:** `apache`, `mysql`, `php`, `all`
 
-Run the command without the `--dry-run` flag to begin the installation.
-
+**Example (Linux):**
 ```bash
-# Install the full LAMP stack with PHP 8.2
-sudo python3 lamp_manager/cli.py --install-stack 8.2
+sudo usm install all
 ```
 
-The script will ask for confirmation before proceeding. After you type `y`, it will begin installing packages.
-
-#### 3. Test Site Creation (`--create-site`)
-
-This command automates the creation of a new website.
-
-**A. Perform a Dry Run**
-
-```bash
-# Dry run for creating a site named 'test.local' with PHP 8.2
-sudo python3 lamp_manager/cli.py --create-site test.local 8.2 --dry-run
-```
-
-This will show you the plan, including the database name and document root that will be created.
-
-**B. Execute the Real Site Creation**
-
-```bash
-# Create the 'test.local' site with PHP 8.2
-sudo python3 lamp_manager/cli.py --create-site test.local 8.2
-```
-
-If the operation is successful, the script will print the **database credentials** (database name, username, and the randomly generated password) to the console. **Make sure to save this password!**
-
-#### 4. Verification
-
-You can verify the installation and site creation with the following commands:
-
-```bash
-# Check Apache and MySQL status
-systemctl is-active apache2
-systemctl is-active mysql
-
-# Check for the Apache virtual host file
-ls /etc/apache2/sites-available/test.local.conf
-
-# Check that the site was enabled
-ls /etc/apache2/sites-enabled/test.local.conf
-
-# Check for the document root directory
-ls -l /var/www/test.local
+**Example (Windows):**
+```powershell
+usm install apache php
 ```
 
 ---
 
-## WAMP Manager (Legacy)
+#### `create-site`
+Creates a new Drupal site.
 
-The legacy WAMP Manager provides a set of scripts for managing a WAMP (Windows, Apache, MySQL, PHP) environment.
-
-*Note: This section preserves the original documentation for the legacy WAMP tool.*
-
-### Show Help
-
-```powershell
-.\PythonFiles\.venv\Scripts\python .\wamp_manager\php_manager.py --help
+**Usage:**
+```bash
+usm create-site [OPTIONS] SITE_NAME
 ```
 
-### List Versions
+**Options:**
+-   `--php-version`: The PHP version to use (e.g., `8.2`). Defaults to `8.2`.
+-   `--drupal-version`: The Drupal version to install (e.g., `^10`). Defaults to `^10`.
 
-```powershell
-.\PythonFiles\.venv\Scripts\python .\wamp_manager\php_manager.py -l
+**Example:**
+```bash
+sudo usm create-site my-drupal-site.local --php-version 8.2
+```
+The script will create the necessary virtual host, database, and download Drupal. At the end, it will display the database credentials. **Make sure to save the password!**
+
+---
+
+#### `list-sites`
+Lists all created sites.
+
+**Usage:**
+```bash
+usm list-sites
 ```
 
-### Install PHP
+---
 
-```powershell
-.\PythonFiles\.venv\Scripts\python .\wamp_manager\php_manager.py --install -v 8.3
+#### `switch-php`
+Switches the PHP version for a specific site.
+
+**Usage:**
+```bash
+usm switch-php [OPTIONS] SITE_NAME PHP_VERSION
 ```
 
-### Change CLI Version
+**PHP Versions:** `7.4`, `8.1`, `8.2`, `8.3`
 
-```powershell
-.\PythonFiles\.venv\Scripts\python .\wamp_manager\php_manager.py -v 8.3
+**Example:**
+```bash
+sudo usm switch-php my-drupal-site.local 8.1
+```
+
+---
+
+#### `status`
+Shows the status of the system components (e.g., Apache, MySQL services).
+
+**Usage:**
+```bash
+usm status
 ```
