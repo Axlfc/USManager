@@ -28,7 +28,7 @@ This tool is ideal for developers and system administrators who need to rapidly 
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/dane-dc/unified-stack-manager.git
+    git clone https://github.com/axlfc/usmanager.git
     cd unified-stack-manager
     ```
 
