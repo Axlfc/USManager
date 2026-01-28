@@ -122,6 +122,28 @@ Si deseas usar modelos locales:
 2. Ejecuta `ollama run llama3`.
 3. En Drupal, configura el proveedor Ollama apuntando a `http://localhost:11434`.
 
+### Pruebas de Agentes de IA con `ai_agents_test`
+El sistema integra `ai_agents_test` para validar el comportamiento de los agentes en un entorno controlado.
+
+**Pasos para probar agentes:**
+1. Crear un sitio con `usm create-site --ai`.
+2. Navegar a `/admin/config/ai/agents/test` en Drupal para acceder al entorno de pruebas.
+3. Ejecutar pruebas automatizadas desde USM:
+   ```bash
+   usm test-ai-agents mi-sitio.local
+   ```
+   Este comando ejecuta `drush ai-agents:test --all` y genera un reporte en Markdown.
+4. Para obtener el reporte en formato JSON:
+   ```bash
+   usm test-ai-agents mi-sitio.local --format=json
+   ```
+
+**Ejemplo de flujo de verificación automática:**
+Al ejecutar `usm verify-ai --site mi-sitio.local`, USM realiza lo siguiente:
+- Crea un agente de prueba (`test_agent_verify`).
+- Ejecuta el agente para crear un nodo de tipo "article".
+- Valida que el nodo se haya creado correctamente, confirmando que el ecosistema de agentes es funcional.
+
 ## 7. Solución de Problemas
 
 | Error | Causa Probable | Solución |

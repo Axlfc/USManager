@@ -85,7 +85,10 @@ class DrupalManager:
             # Step 7: Configure Markdown in CKEditor
             self._configure_markdown_support(project_path)
 
-        # Step 8: Verify installation
+            # Step 8: Configure AI Agents Test
+            self._configure_ai_agents_test(project_path)
+
+        # Step 9: Verify installation
         self._verify_installation(project_path)
 
         self.log(f"Successfully processed Drupal site: {project_name}", "INFO")
@@ -167,7 +170,8 @@ class DrupalManager:
             "drupal/ai_provider_ollama",
             "drupal/ai_provider_anthropic",
             "drupal/ai_provider_google",
-            "drupal/ckeditor5_markdown"
+            "drupal/ckeditor5_markdown",
+            "drupal/ai_agents_test:^1.0@alpha"
         ]
 
         for module in modules:
@@ -227,7 +231,8 @@ class DrupalManager:
             "ai_provider_ollama",
             "ai_provider_anthropic",
             "ai_provider_google",
-            "ckeditor5_markdown"
+            "ckeditor5_markdown",
+            "ai_agents_test"
         ]
 
         # Enable them one by one or in small groups to avoid memory issues and identify failures
@@ -346,6 +351,23 @@ class DrupalManager:
             return True
 
         return False
+
+    def _configure_ai_agents_test(self, project_path):
+        """Configures the AI Agents Test module settings."""
+        self.log("Configuring AI Agents Test settings...")
+        drush_path = project_path / "vendor" / "bin" / "drush"
+
+        commands = [
+            ["config:set", "ai_agents_test.settings", "test_environment", "true", "-y"],
+            ["config:set", "ai_agents_test.settings", "sample_data.nodes", "3", "-y"],
+            ["config:set", "ai_agents_test.settings", "sample_data.taxonomies", "2", "-y"]
+        ]
+
+        for cmd in commands:
+            full_cmd = [self.php_exe_path, str(drush_path)] + cmd
+            self._run_command(full_cmd, project_path / "web")
+
+        return True
 
     def _configure_markdown_support(self, project_path):
         """Configures the Markdown plugin in CKEditor 5 text formats."""

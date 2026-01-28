@@ -55,6 +55,7 @@ Para una guía paso a paso detallada en Windows, consulta: [GUIA_DETALLADA_WINDO
 | :--- | :--- |
 | `ai` | Core del ecosistema de IA en Drupal. |
 | `ai_agents` | Framework para agentes autónomos. |
+| `ai_agents_test` | Entorno de pruebas y validación para agentes de IA. |
 | `ai_automators` | Automatización de tareas basada en IA. |
 | `ai_content_suggestions` | Genera títulos, resúmenes y sugerencias de contenido. |
 | `ai_translate` | Traducción automática de entidades y campos. |
@@ -73,6 +74,7 @@ Para una guía paso a paso detallada en Windows, consulta: [GUIA_DETALLADA_WINDO
 - `usm create-site [SITE_NAME] --ai`: Despliegue completo con IA. Incluye soporte de Markdown en CKEditor 5 por defecto.
 - `usm enable-markdown [SITE_NAME]`: Habilita el soporte de Markdown en un sitio existente.
 - `usm verify-ai --site [SITE_NAME]`: Diagnóstico técnico del entorno de IA.
+- `usm test-ai-agents [SITE_NAME]`: Ejecuta pruebas de agentes y genera reportes.
 - `usm status`: Muestra el estado de los servicios (Apache, MySQL, PHP).
 - `usm switch-php [SITE_NAME] [VERSION]`: Cambia la versión de PHP del sitio.
 

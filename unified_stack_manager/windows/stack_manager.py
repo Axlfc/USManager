@@ -2,6 +2,7 @@
 
 import secrets
 import string
+import time
 from typing import List, Dict
 from pathlib import Path
 
@@ -150,6 +151,9 @@ class WindowsStackManager(BaseStackManager):
         else:
             print("⚠️ Saltando pruebas de conexión debido a falta de archivo .env")
 
+        # 4. Verificación de Agente de Prueba
+        self._verify_test_agent(site_path)
+
         return True
 
     def _verify_global_ai_config(self):
@@ -185,7 +189,7 @@ class WindowsStackManager(BaseStackManager):
                     "mcp", "model_context_protocol", "langfuse",
                     "ai_provider_openai", "ai_provider_ollama",
                     "ai_provider_anthropic", "ai_provider_google",
-                    "ckeditor5_markdown"
+                    "ckeditor5_markdown", "ai_agents_test"
                 ]
                 for mod in required_modules:
                     status = "✅" if mod in enabled_modules else "❌"
@@ -225,6 +229,68 @@ class WindowsStackManager(BaseStackManager):
         except Exception as e:
             print(f"❌ Error leyendo .env: {e}")
             return None
+
+    def _verify_test_agent(self, site_path: Path):
+        print("\n🤖 Verificando ejecución de Agente de Prueba...")
+        drush_path = site_path / "vendor" / "bin" / "drush"
+
+        # 1. Crear el agente de prueba
+        create_script = """
+        $agent = \\Drupal::entityTypeManager()->getStorage('ai_agent')->load('test_agent_verify');
+        if (!$agent) {
+            $agent = \\Drupal::entityTypeManager()->getStorage('ai_agent')->create([
+                'id' => 'test_agent_verify',
+                'label' => 'Agente de Prueba para Verificación',
+                'actions' => [
+                    [
+                        'action' => 'create_node',
+                        'node_type' => 'article',
+                        'title' => 'Prueba de Agente - ' . date('Y-m-d H:i:s'),
+                        'body' => 'Contenido generado automáticamente para validar el agente.',
+                    ],
+                ],
+            ]);
+            $agent->save();
+            echo "Agente 'test_agent_verify' creado.\\n";
+        }
+        """
+        import subprocess
+        subprocess.run([self.drupal_manager.php_exe_path, str(drush_path), "php:eval", create_script], cwd=site_path / "web", capture_output=True)
+
+        # 2. Ejecutar el agente
+        print("  - Ejecutando agente 'test_agent_verify'...")
+        exec_cmd = [self.drupal_manager.php_exe_path, str(drush_path), "ai-agents:execute", "test_agent_verify"]
+        result = subprocess.run(exec_cmd, cwd=site_path / "web", capture_output=True, text=True)
+
+        if result.returncode == 0:
+            # 3. Validar creación del nodo
+            validate_script = """
+            $query = \\Drupal::entityQuery('node')
+                ->condition('type', 'article')
+                ->condition('title', 'Prueba de Agente - ', 'CONTAINS')
+                ->sort('created', 'DESC')
+                ->range(0, 1)
+                ->accessCheck(FALSE);
+            $nids = $query->execute();
+            if (!empty($nids)) {
+                $nid = reset($nids);
+                $node = \\Drupal\\node\\Entity\\Node::load($nid);
+                echo "SUCCESS:" . $node->id() . ":" . $node->getTitle();
+            } else {
+                echo "FAILURE";
+            }
+            """
+            val_result = subprocess.run([self.drupal_manager.php_exe_path, str(drush_path), "php:eval", validate_script], cwd=site_path / "web", capture_output=True, text=True)
+
+            if "SUCCESS" in val_result.stdout:
+                parts = val_result.stdout.strip().split(':')
+                nid = parts[1]
+                title = parts[2]
+                print(f"  ✅ ai_agents_test: Agente 'test_agent_verify' ejecutado correctamente. Nodo '{title}' creado con ID {nid}.")
+            else:
+                print("  ❌ ai_agents_test: No se pudo encontrar el nodo creado por el agente.")
+        else:
+            print(f"  ❌ ai_agents_test: Falló la ejecución del agente. Error: {result.stderr}")
 
     def _test_ai_connections(self, env_vars):
         print("\n🌐 Probando conexiones a proveedores de IA...")
@@ -276,6 +342,54 @@ class WindowsStackManager(BaseStackManager):
     def get_site_path(self, site_name: str) -> Path:
         base_path = self.config.get('apache.sites_dir', 'C:/APACHE24/htdocs')
         return Path(base_path) / site_name
+
+    def test_ai_agents(self, site_name: str, format: str = 'markdown') -> bool:
+        """Ejecuta pruebas de agentes de IA y genera un reporte."""
+        print(f"🧪 Ejecutando pruebas de agentes para '{site_name}'...")
+        site_path = self.get_site_path(site_name)
+        if not site_path.exists():
+            print(f"❌ Error: El sitio '{site_name}' no existe.")
+            return False
+
+        drush_path = site_path / "vendor" / "bin" / "drush"
+        import subprocess
+
+        # Ejecutar drush ai-agents:test --all
+        # Nota: El comando drush suele tener opciones para formato si el módulo lo soporta,
+        # pero aquí implementamos la lógica de reporte solicitada.
+        cmd = [self.drupal_manager.php_exe_path, str(drush_path), "ai-agents:test", "--all"]
+        result = subprocess.run(cmd, cwd=site_path / "web", capture_output=True, text=True)
+
+        if format == 'json':
+            import json
+            report = {
+                "site": site_name,
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "success": result.returncode == 0,
+                "output": result.stdout,
+                "error": result.stderr
+            }
+            print(json.dumps(report, indent=2))
+        else:
+            # Markdown por defecto
+            print(f"# Informe de Pruebas de Agentes de IA - {site_name}")
+            print(f"**Fecha:** {time.strftime('%Y-%m-%d')}")
+            print(f"**Hora:** {time.strftime('%H:%M:%S')}")
+            print("\n## Resultados")
+            if result.returncode == 0:
+                print("✅ Todas las pruebas se ejecutaron correctamente.")
+            else:
+                print("❌ Se detectaron errores en las pruebas.")
+
+            print("\n### Salida del comando:")
+            print("```")
+            print(result.stdout)
+            if result.stderr:
+                print("\n### Errores:")
+                print(result.stderr)
+            print("```")
+
+        return result.returncode == 0
 
     def enable_markdown(self, site_name: str) -> bool:
         """Habilita el soporte de Markdown para un sitio existente en Windows."""
