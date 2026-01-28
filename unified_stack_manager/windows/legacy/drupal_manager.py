@@ -79,7 +79,10 @@ class DrupalManager:
             # Step 5: Create .env.example
             self._create_env_example(project_path)
 
-        # Step 6: Verify installation
+            # Step 6: Create sample blog
+            self._create_sample_blog(project_path)
+
+        # Step 7: Verify installation
         self._verify_installation(project_path)
 
         self.log(f"Successfully processed Drupal site: {project_name}", "INFO")
@@ -151,6 +154,10 @@ class DrupalManager:
             "drupal/ai_provider_anthropic",
             "drupal/ai_provider_google",
             "drupal/gemini_provider",
+            "drupal/ai_content_suggestions",
+            "drupal/ai_translate",
+            "drupal/ai_chatbot",
+            "drupal/ai_search",
             "drupal/ai_image_alt_text",
             "drupal/ai_media_image",
             "drupal/ai_seo",
@@ -201,10 +208,10 @@ class DrupalManager:
             "ai_provider_anthropic",
             "ai_provider_google",
             "gemini_provider",
+            "ai_content_suggestions",
+            "ai_translate",
             "ai_chatbot",
             "ai_ckeditor",
-            "ai_content",
-            "ai_translate",
             "ai_search",
             "ai_logging",
             "ai_observability",
@@ -212,6 +219,7 @@ class DrupalManager:
             "ai_media_image",
             "ai_seo",
             "mcp",
+            "model_context_protocol",
             "langfuse"
         ]
 
@@ -241,6 +249,50 @@ class DrupalManager:
             "--format=table"
         ]
         return self._run_command(command, project_path / "web")
+
+    def _create_sample_blog(self, project_path):
+        """Creates a sample blog with content, taxonomies and menu."""
+        self.log("Creating sample blog content...")
+        drush_path = project_path / "vendor" / "bin" / "drush"
+
+        # 1. Create taxonomy terms for 'tags' (Standard profile has 'tags')
+        vocab = "tags"
+        terms = ["IA", "Tecnología", "Pruebas"]
+        for term in terms:
+            self.log(f"Creating taxonomy term: {term}")
+            command = [
+                self.php_exe_path, str(drush_path), "php:eval",
+                f"\\Drupal\\taxonomy\\Entity\\Term::create(['name' => '{term}', 'vid' => '{vocab}'])->save();"
+            ]
+            self._run_command(command, project_path / "web")
+
+        # 2. Create 3 blog posts (using 'article' type which is standard)
+        posts = [
+            {"title": "El futuro de la IA en Drupal", "body": "Este es un post generado automáticamente para probar las capacidades de IA."},
+            {"title": "Innovación Tecnológica con Ollama", "body": "Ollama permite correr LLMs localmente de forma sencilla."},
+            {"title": "Pruebas de Automatización con USM", "body": "Unified Stack Manager facilita el despliegue de entornos complejos."}
+        ]
+
+        for post in posts:
+            self.log(f"Creating blog post: {post['title']}")
+            # Escaping single quotes in body if any
+            body_content = post['body'].replace("'", "\\'")
+            command = [
+                self.php_exe_path, str(drush_path), "php:eval",
+                f"$node = \\Drupal\\node\\Entity\\Node::create(['type' => 'article', 'title' => '{post['title']}', 'body' => ['value' => '{body_content}', 'format' => 'basic_html'], 'status' => 1]); $node->save();"
+            ]
+            self._run_command(command, project_path / "web")
+
+        # 3. Add a link to 'articles' in main menu (usually /node or /blog if view exists)
+        # Standard profile has articles at /node. We can create a menu link.
+        self.log("Adding blog link to main menu...")
+        command = [
+            self.php_exe_path, str(drush_path), "php:eval",
+            "\\Drupal\\menu_link_content\\Entity\\MenuLinkContent::create(['title' => 'Blog', 'link' => ['uri' => 'internal:/node'], 'menu_name' => 'main', 'weight' => 0])->save();"
+        ]
+        self._run_command(command, project_path / "web")
+
+        return True
 
     def _create_env_example(self, project_path):
         """Creates a .env.example file with API key placeholders."""

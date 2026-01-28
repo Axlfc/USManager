@@ -1,8 +1,8 @@
-# lamp_manager/linux/apache_manager.py
+# unified_stack_manager/linux/apache_manager.py
 
 import subprocess
 from pathlib import Path
-from lamp_manager.platform.package_manager import get_package_manager
+from unified_stack_manager.platform.package_manager import get_package_manager
 
 class ApacheManager:
     def __init__(self, config, logger, rollback):

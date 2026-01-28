@@ -122,6 +122,139 @@ class WindowsStackManager(BaseStackManager):
         self.wamp_orchestrator.info()
         return {}
 
+    def verify_ai(self, site_name: str = None) -> bool:
+        """Verifica el entorno de IA y las conexiones."""
+        print("🔍 Iniciando verificación técnica del entorno de IA...")
+
+        if not site_name:
+            # Si no se especifica sitio, buscar el último o listar disponibles
+            print("⚠️ No se especificó sitio. Verificando configuración global...")
+            return self._verify_global_ai_config()
+
+        site_path = self.get_site_path(site_name)
+        if not site_path.exists():
+            print(f"❌ Error: El sitio '{site_name}' no existe en {site_path}")
+            return False
+
+        print(f"📂 Verificando sitio: {site_name}")
+
+        # 1. Verificar módulos con Drush
+        self._verify_drupal_modules(site_path)
+
+        # 2. Validar .env
+        env_vars = self._validate_env_file(site_path)
+
+        # 3. Probar conexiones
+        if env_vars:
+            self._test_ai_connections(env_vars)
+        else:
+            print("⚠️ Saltando pruebas de conexión debido a falta de archivo .env")
+
+        return True
+
+    def _verify_global_ai_config(self):
+        root_env_example = Path(".env.example")
+        if root_env_example.exists():
+            print(f"✅ .env.example global encontrado en la raíz.")
+        else:
+            print(f"❌ .env.example global NO encontrado en la raíz.")
+
+        print("\nPara verificar un sitio específico usa: usm verify-ai --site nombre-del-sitio")
+        return True
+
+    def _verify_drupal_modules(self, site_path: Path):
+        print("\n📦 Verificando módulos de Drupal...")
+        drush_path = site_path / "vendor" / "bin" / "drush"
+        if not drush_path.exists():
+            print("❌ No se encontró Drush en el proyecto.")
+            return
+
+        command = [self.drupal_manager.php_exe_path, str(drush_path), "pm:list", "--status=enabled", "--format=json"]
+        import subprocess
+        import json
+        try:
+            result = subprocess.run(command, cwd=site_path / "web", capture_output=True, text=True)
+            if result.returncode == 0:
+                enabled_modules = json.loads(result.stdout)
+                required_modules = [
+                    "ai", "key", "ai_agents", "ai_simple_pdf_to_text", "tool",
+                    "ai_provider_openai", "ai_provider_ollama", "ai_provider_anthropic",
+                    "ai_provider_google", "gemini_provider", "ai_content_suggestions",
+                    "ai_translate", "ai_chatbot", "ai_ckeditor", "ai_search",
+                    "ai_logging", "ai_observability", "ai_image_alt_text",
+                    "ai_media_image", "ai_seo", "mcp", "model_context_protocol", "langfuse"
+                ]
+                for mod in required_modules:
+                    status = "✅" if mod in enabled_modules else "❌"
+                    print(f"  {status} Módulo '{mod}'")
+            else:
+                print(f"❌ Error al ejecutar Drush: {result.stderr}")
+        except Exception as e:
+            print(f"❌ Error verificando módulos: {e}")
+
+    def _validate_env_file(self, site_path: Path):
+        print("\n📄 Validando archivo .env...")
+        env_file = site_path / ".env"
+        if not env_file.exists():
+            env_example = site_path / ".env.example"
+            if env_example.exists():
+                print(f"⚠️ .env no encontrado, pero .env.example existe. Por favor, cópialo y configúralo.")
+            else:
+                print(f"❌ No se encontró .env ni .env.example.")
+            return None
+
+        # Cargar variables básicas
+        vars = {}
+        try:
+            with open(env_file, 'r') as f:
+                for line in f:
+                    if '=' in line and not line.startswith('#'):
+                        key, val = line.strip().split('=', 1)
+                        vars[key] = val.strip('"').strip("'")
+
+            check_keys = ["OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GOOGLE_GEMINI_API_KEY", "OLLAMA_BASE_URL"]
+            for k in check_keys:
+                if k in vars and vars[k] and "your_" not in vars[k]:
+                    print(f"  ✅ {k} está configurado.")
+                else:
+                    print(f"  ⚠️ {k} no está configurado o tiene valor por defecto.")
+            return vars
+        except Exception as e:
+            print(f"❌ Error leyendo .env: {e}")
+            return None
+
+    def _test_ai_connections(self, env_vars):
+        print("\n🌐 Probando conexiones a proveedores de IA...")
+
+        # Probar Ollama (Local)
+        ollama_url = env_vars.get("OLLAMA_BASE_URL", "http://localhost:11434")
+        print(f"  - Probando Ollama en {ollama_url}...")
+        import urllib.request
+        try:
+            with urllib.request.urlopen(f"{ollama_url}/api/tags", timeout=5) as response:
+                if response.status == 200:
+                    print("    ✅ Ollama responde correctamente.")
+                else:
+                    print(f"    ❌ Ollama respondió con status {response.status}.")
+        except Exception as e:
+            print(f"    ❌ Ollama no responde: {e}")
+
+        # Probar OpenAI (solo si hay key)
+        openai_key = env_vars.get("OPENAI_API_KEY")
+        if openai_key and "your_" not in openai_key:
+            print("  - Probando OpenAI API...")
+            # Un simple request a models
+            req = urllib.request.Request("https://api.openai.com/v1/models")
+            req.add_header("Authorization", f"Bearer {openai_key}")
+            try:
+                with urllib.request.urlopen(req, timeout=10) as response:
+                    if response.status == 200:
+                        print("    ✅ OpenAI API responde correctamente.")
+            except Exception as e:
+                print(f"    ❌ OpenAI API error: {e}")
+        else:
+            print("  - Saltando OpenAI (sin key)")
+
     def get_site_path(self, site_name: str) -> Path:
-        base_path = self.config.get('apache.sites_dir', 'C:/xampp/htdocs')
+        base_path = self.config.get('apache.sites_dir', 'C:/APACHE24/htdocs')
         return Path(base_path) / site_name

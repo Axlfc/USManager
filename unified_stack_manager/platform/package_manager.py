@@ -1,4 +1,4 @@
-# lamp_manager/platform/package_manager.py
+# unified_stack_manager/platform/package_manager.py
 
 from abc import ABC, abstractmethod
 import subprocess

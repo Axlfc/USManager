@@ -1,8 +1,16 @@
 # config/default.yml
 
 php:
-  supported_versions: ['7.4', '8.1', '8.2', '8.3']
-  default_version: '8.2'
+  supported_versions: ['7.4', '8.1', '8.2', '8.3', '8.4']
+  default_version: '8.4'
+
+apache:
+  default_php_version: '8.2'
+  doc_root_subdir: 'web'
+
+mysql:
+  default_charset: 'utf8mb4'
+  default_collation: 'utf8mb4_unicode_ci'
 
 drupal:
   default_profile: 'standard'

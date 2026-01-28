@@ -1,4 +1,4 @@
-# lamp_manager/core/rollback.py
+# unified_stack_manager/core/rollback.py
 
 import shutil
 import os

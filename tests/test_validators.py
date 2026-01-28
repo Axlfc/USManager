@@ -2,7 +2,7 @@
 
 import unittest
 from unittest.mock import patch
-from lamp_manager.core.validators import SystemValidator
+from unified_stack_manager.core.validators import SystemValidator
 
 class TestValidators(unittest.TestCase):
 

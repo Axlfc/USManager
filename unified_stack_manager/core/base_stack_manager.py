@@ -26,6 +26,11 @@ class BaseStackManager(ABC):
         pass
 
     @abstractmethod
+    def verify_ai(self, site_name: Optional[str] = None) -> bool:
+        """Verifica el entorno de IA y conexiones"""
+        pass
+
+    @abstractmethod
     def create_drupal_site(self, site_name: str, php_version: str, drupal_version: str, ai_mode: bool = False) -> bool:
         """Crea un nuevo sitio Drupal"""
         pass

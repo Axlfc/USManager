@@ -259,5 +259,12 @@ class LinuxStackManager(BaseStackManager):
 
         return status_data
 
+    def verify_ai(self, site_name: str = None) -> bool:
+        """Verifica el entorno de IA en Linux (Placeholder)."""
+        print("🔍 Verificación de IA en Linux no implementada detalladamente.")
+        if not site_name:
+            print("✅ .env.example global existe." if Path(".env.example").exists() else "❌ .env.example global falta.")
+        return True
+
     def get_site_path(self, site_name: str) -> Path:
         return Path(self.config.get('apache.sites_dir')) / site_name

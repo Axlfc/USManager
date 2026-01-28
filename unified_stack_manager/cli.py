@@ -122,6 +122,17 @@ def switch_php(ctx, site_name, php_version):
     except Exception as e:
         handle_exception(e, ctx.obj['verbose'])
 
+@cli.command('verify-ai')
+@click.option('--site', help='Nombre del sitio a verificar')
+@click.pass_context
+def verify_ai(ctx, site):
+    """Verificar el entorno de IA y las conexiones a los proveedores."""
+    manager = ctx.obj['manager']
+    try:
+        manager.verify_ai(site_name=site)
+    except Exception as e:
+        handle_exception(e, ctx.obj['verbose'])
+
 @cli.command()
 @click.pass_context
 def status(ctx):

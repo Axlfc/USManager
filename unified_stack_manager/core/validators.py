@@ -1,4 +1,4 @@
-# lamp_manager/core/validators.py
+# unified_stack_manager/core/validators.py
 import os
 import re
 import socket

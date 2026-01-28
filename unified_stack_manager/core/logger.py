@@ -1,4 +1,4 @@
-# lamp_manager/core/logger.py
+# unified_stack_manager/core/logger.py
 
 import logging
 import json
@@ -9,7 +9,7 @@ from pathlib import Path
 class AuditLogger:
     """Logger especializado para auditoría de cambios en producción"""
 
-    def __init__(self, log_dir: Path = Path("/var/log/lamp-manager")):
+    def __init__(self, log_dir: Path = Path("/var/log/unified-stack-manager")):
         self.log_dir = log_dir
         try:
             self.log_dir.mkdir(parents=True, exist_ok=True)
@@ -25,7 +25,7 @@ class AuditLogger:
         self.audit_logger = self._setup_audit_logger()
 
     def _setup_tech_logger(self):
-        logger = logging.getLogger('lamp_manager.technical')
+        logger = logging.getLogger('unified_stack_manager.technical')
         logger.setLevel(logging.DEBUG)
 
         try:
@@ -39,7 +39,7 @@ class AuditLogger:
         return logger
 
     def _setup_audit_logger(self):
-        logger = logging.getLogger('lamp_manager.audit')
+        logger = logging.getLogger('unified_stack_manager.audit')
         logger.setLevel(logging.INFO)
 
         try:

@@ -1,137 +1,86 @@
-# Unified Stack Manager (USM)
+# Proyecto Drupal + IA (Unified Stack Manager)
 
-Unified Stack Manager (USM) is a versatile command-line tool designed to streamline the setup and management of local development environments for Drupal. It provides a unified interface for both Windows (WAMP) and Linux (LAMP) stacks, automating repetitive tasks and ensuring consistency across platforms.
+**Estado:** En desarrollo (Drupal 11 + Módulos de IA).
 
-This tool is ideal for developers and system administrators who need to rapidly provision, configure, and manage web servers for Drupal projects.
-
-## Features
-
--   **Cross-Platform**: Works on both Debian-based Linux (Ubuntu, Debian) and Windows.
--   **Full Stack Installation**: Installs Apache, MySQL/MariaDB, and multiple PHP versions.
--   **Automated Drupal Site Creation**: Creates Apache virtual hosts, databases, and installs Drupal with a single command.
--   **Multi-PHP Support**: Easily switch between different PHP versions for your projects.
--   **Safety First**:
-    -   **Pre-execution Validation**: Checks for administrator/root permissions.
-    -   **Dry-Run Mode**: Preview all changes before they are made.
--   **Configuration Driven**: Uses a central YAML file for configuration to avoid hardcoded values.
--   **Audit Logging**: Logs all actions for traceability.
-
-## Requirements
-
--   **Operating System**:
-    -   Debian-based Linux (e.g., Ubuntu 22.04 LTS)
-    -   Windows 10/11
--   **Permissions**: `sudo` / Administrator access.
--   **Python**: Python 3.8+
-
-## Installation
-
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/axlfc/usm.git unified-stack-manager
-    cd unified-stack-manager
-    ```
-
-2.  **Install the package in editable mode:**
-    This will install the necessary dependencies and make the `usm` command available in your terminal.
-    ```bash
-    pip install -e .
-    ```
-    On Linux, you might need to use `sudo`:
-    ```bash
-    sudo pip install -e .
-    ```
-
-## Usage
-
-The main command is `usm`. You can see a list of all available commands by running:
-```bash
-usm --help
-```
-
-### Global Options
-
--   `--dry-run`: Simulate the command without making any changes to the system.
--   `--config FILE`: Use a custom configuration file.
--   `--verbose` or `-v`: Enable detailed output, useful for debugging.
+Unified Stack Manager (USM) es una herramienta versátil de línea de comandos diseñada para simplificar la configuración y gestión de entornos de desarrollo local para Drupal, con un enfoque especial en la integración de Inteligencia Artificial.
 
 ---
 
-### Commands
-
-#### `install`
-Installs stack components.
-
-**Usage:**
-```bash
-usm install [OPTIONS] [COMPONENTS]...
-```
-
-**Components:** `apache`, `mysql`, `php`, `all`
-
-**Example (Linux):**
-```bash
-sudo usm install all
-```
-
-**Example (Windows):**
-```powershell
-usm install apache php
-```
+## 📋 Requisitos
+- **Sistema Operativo:** Windows 10/11 (vía MobaXterm) o Linux (Debian/Ubuntu).
+- **Stack:** PHP 8.4, Apache 2.4, MySQL/MariaDB.
+- **Python:** 3.8 o superior.
+- **Permisos:** Acceso de Administrador / sudo.
 
 ---
 
-#### `create-site`
-Creates a new Drupal site.
+## 🚀 Instalación y Despliegue
 
-**Usage:**
+### 1. Clonar el repositorio
 ```bash
-usm create-site [OPTIONS] SITE_NAME
+git clone https://github.com/axlfc/usm.git unified-stack-manager
+cd unified-stack-manager
 ```
 
-**Options:**
--   `--php-version`: The PHP version to use (e.g., `8.2`). Defaults to `8.2`.
--   `--drupal-version`: The Drupal version to install (e.g., `^10`). Defaults to `^10`.
-
-**Example:**
+### 2. Instalar el paquete en modo editable
 ```bash
-sudo usm create-site my-drupal-site.local --php-version 8.2
+pip install -e .
 ```
-The script will create the necessary virtual host, database, and download Drupal. At the end, it will display the database credentials. **Make sure to save the password!**
+
+### 3. Crear un sitio con automatización de IA
+```bash
+usm create-site mi-sitio-ia.local --ai
+```
+Este comando instala Drupal 11, activa todos los módulos de IA necesarios y crea un blog de ejemplo con contenido inicial.
 
 ---
 
-#### `list-sites`
-Lists all created sites.
+## 🔧 Configuración de IA
 
-**Usage:**
+Para habilitar las funciones de IA, sigue estos pasos:
+1. Copia el archivo `.env.example` de la raíz del proyecto al directorio de tu sitio como `.env`.
+2. Añade tus API Keys (OpenAI, Anthropic, etc.).
+3. Valida tu entorno con el comando de verificación:
 ```bash
-usm list-sites
+usm verify-ai --site mi-sitio-ia.local
 ```
+
+Para una guía paso a paso detallada en Windows, consulta: [GUIA_DETALLADA_WINDOWS.md](./GUIA_DETALLADA_WINDOWS.md)
 
 ---
 
-#### `switch-php`
-Switches the PHP version for a specific site.
+## 🤖 Módulos de IA Activados
 
-**Usage:**
-```bash
-usm switch-php [OPTIONS] SITE_NAME PHP_VERSION
-```
-
-**PHP Versions:** `7.4`, `8.1`, `8.2`, `8.3`
-
-**Example:**
-```bash
-sudo usm switch-php my-drupal-site.local 8.1
-```
+| Módulo | Descripción |
+| :--- | :--- |
+| `ai` | Core del ecosistema de IA en Drupal. |
+| `ai_content_suggestions` | Genera títulos, resúmenes y sugerencias de contenido. |
+| `ai_translate` | Traducción automática de entidades y campos. |
+| `ai_media_image` | Generación de imágenes mediante IA (DALL-E, etc.). |
+| `ai_chatbot` | Integración de interfaces de chat en el sitio. |
+| `ai_provider_openai` | Soporte para modelos de OpenAI (GPT-4). |
+| `ai_provider_ollama` | Soporte para LLMs locales vía Ollama. |
+| `mcp` | Soporte para Model Context Protocol. |
 
 ---
 
-#### `status`
-Shows the status of the system components (e.g., Apache, MySQL services).
+## 🛠️ Comandos Principales
 
-**Usage:**
-```bash
-usm status
-```
+- `usm create-site [SITE_NAME] --ai`: Despliegue completo con IA.
+- `usm verify-ai --site [SITE_NAME]`: Diagnóstico técnico del entorno de IA.
+- `usm status`: Muestra el estado de los servicios (Apache, MySQL, PHP).
+- `usm switch-php [SITE_NAME] [VERSION]`: Cambia la versión de PHP del sitio.
+
+---
+
+## ❓ Solución de Problemas
+
+- **Error: "API key no válida"**: Verifica tu archivo `.env` y asegúrate de que no haya espacios extra.
+- **Error: "Ollama no responde"**: Asegúrate de que Ollama esté ejecutándose en `http://localhost:11434`.
+- **Módulo no encontrado**: Ejecuta `composer require drupal/[modulo]` en la carpeta del sitio.
+
+---
+
+## 📝 Documentación Adicional
+- [Guía Detallada para Windows](./GUIA_DETALLADA_WINDOWS.md)
+- [Registro de Auditoría](./logs/audit.log) (si está habilitado)
