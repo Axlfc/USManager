@@ -60,6 +60,11 @@ class BaseStackManager(ABC):
         """Habilita el soporte de Markdown para un sitio existente"""
         pass
 
+    @abstractmethod
+    def test_ai_agents(self, site_name: str, format: str = 'markdown') -> bool:
+        """Ejecuta pruebas de agentes de IA y genera un reporte"""
+        pass
+
     def _log_operation(self, action: str, target: str, details: Dict = None):
         """Helper para logging consistente"""
         import os

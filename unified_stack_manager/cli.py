@@ -144,6 +144,18 @@ def enable_markdown(ctx, site_name):
     except Exception as e:
         handle_exception(e, ctx.obj['verbose'])
 
+@cli.command('test-ai-agents')
+@click.argument('site_name')
+@click.option('--format', type=click.Choice(['markdown', 'json']), default='markdown', help='Formato del reporte')
+@click.pass_context
+def test_ai_agents(ctx, site_name, format):
+    """Ejecutar pruebas de agentes de IA y generar un reporte."""
+    manager = ctx.obj['manager']
+    try:
+        manager.test_ai_agents(site_name=site_name, format=format)
+    except Exception as e:
+        handle_exception(e, ctx.obj['verbose'])
+
 @cli.command()
 @click.pass_context
 def status(ctx):
