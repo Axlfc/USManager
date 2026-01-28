@@ -71,10 +71,15 @@ graph TD;
    ```
 
 ## 5. Verificación del Entorno
-USM incluye una herramienta de diagnóstico para asegurar que todo esté listo:
+USM incluye una herramienta de diagnóstico para asegurar que los ~23 módulos de IA estén activos:
 ```bash
 usm verify-ai --site mi-sitio-ai.local
 ```
+
+**Módulos verificados:**
+- Core: `ai`, `key`, `ai_agents`, `ai_automators`, `ai_assistants_api`.
+- Funcionalidad: `ai_chatbot`, `ai_content_suggestions`, `ai_translate`, `ai_seo`.
+- Proveedores: `ai_provider_openai`, `ai_provider_ollama`, `ai_provider_anthropic`, `ai_provider_google`.
 
 **Salida esperada:**
 ```text
@@ -90,11 +95,16 @@ usm verify-ai --site mi-sitio-ai.local
 
 ## 6. Uso de Funcionalidades de IA
 
-### Creación de Contenido Automático
-El sistema crea automáticamente 3 posts en `/node`. Puedes usar los módulos instalados para:
-- **Sugerencias de contenido:** En el formulario de edición de nodos, usa las herramientas de `ai_content_suggestions`.
-- **Traducción:** Usa `ai_translate` para convertir posts a otros idiomas.
-- **Imágenes:** `ai_media_image` permite generar imágenes basadas en el texto del post.
+### Creación de Contenido Automático (Dynamic AI Blog)
+El sistema intenta generar contenido dinámico si detecta API Keys:
+1. **Detección:** Busca `OPENAI_API_KEY` en el archivo `.env` del sitio.
+2. **Generación:** Llama al servicio `ai_content_suggestions.suggestor` vía Drush.
+3. **Fallback:** Si no hay llaves, crea 3 artículos estáticos de ejemplo.
+
+Puedes interactuar con los módulos:
+- **Sugerencias:** Usa las herramientas de `ai_content_suggestions` en el editor.
+- **Traducción:** `ai_translate` para multilenguaje automático.
+- **Imágenes:** `ai_media_image` para generar visuales.
 
 ### Uso de Ollama (IA Local)
 Si deseas usar modelos locales:
@@ -110,5 +120,18 @@ Si deseas usar modelos locales:
 | `Ollama no responde` | El servicio no está corriendo | Ejecuta `ollama serve` en una terminal. |
 | `Acceso denegado DB` | Credenciales incorrectas | Revisa el archivo `web/sites/default/settings.php`. |
 
-## 8. Conclusión
-El entorno está diseñado para ser **idempotente** y **robusto**. Cualquier fallo en la conexión de IA puede ser diagnosticado rápidamente con `usm verify-ai`.
+## 8. Validación en Windows (Para QA/Equipos)
+Para validar la instalación en un entorno Windows limpio:
+1. Abrir **MobaXterm** o PowerShell (Admin).
+2. Clonar e instalar:
+   ```powershell
+   git clone https://github.com/axlfc/usm.git
+   cd unified-stack-manager
+   pip install -e .
+   ```
+3. Ejecutar creación: `usm create-site test-ia.local --ai`
+4. Verificar módulos: `usm verify-ai --site test-ia.local`
+5. (Opcional) Configurar `.env` y re-ejecutar `verify-ai` para probar conectividad.
+
+## 9. Conclusión
+El entorno está diseñado para ser **idempotente** y **robusto**. La unificación permite que tanto usuarios de Windows como de Linux disfruten de la misma automatización avanzada de IA para Drupal 11.

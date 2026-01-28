@@ -9,7 +9,7 @@ from contextlib import contextmanager
 class RollbackManager:
     """Gestiona backups y rollbacks automáticos"""
 
-    def __init__(self, backup_dir: Path = Path('/var/backups/lamp-manager')):
+    def __init__(self, backup_dir: Path = Path('/var/backups/unified-stack-manager')):
         self.backup_dir = backup_dir
         try:
             self.backup_dir.mkdir(parents=True, exist_ok=True)

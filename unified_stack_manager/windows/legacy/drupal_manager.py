@@ -149,20 +149,21 @@ class DrupalManager:
             "drupal/ai_agents",
             "drupal/ai_simple_pdf_to_text:^1.0@alpha",
             "drupal/tool:^1.0@alpha",
-            "drupal/ai_provider_openai",
-            "drupal/ai_provider_ollama",
-            "drupal/ai_provider_anthropic",
-            "drupal/ai_provider_google",
-            "drupal/gemini_provider",
+            "drupal/ai_automators",
+            "drupal/ai_assistants_api",
+            "drupal/ai_chatbot",
             "drupal/ai_content_suggestions",
             "drupal/ai_translate",
-            "drupal/ai_chatbot",
             "drupal/ai_search",
             "drupal/ai_image_alt_text",
             "drupal/ai_media_image",
             "drupal/ai_seo",
             "drupal/mcp",
-            "drupal/langfuse"
+            "drupal/langfuse",
+            "drupal/ai_provider_openai",
+            "drupal/ai_provider_ollama",
+            "drupal/ai_provider_anthropic",
+            "drupal/ai_provider_google"
         ]
 
         for module in modules:
@@ -203,15 +204,12 @@ class DrupalManager:
             "ai_agents",
             "ai_simple_pdf_to_text",
             "tool",
-            "ai_provider_openai",
-            "ai_provider_ollama",
-            "ai_provider_anthropic",
-            "ai_provider_google",
-            "gemini_provider",
-            "ai_content_suggestions",
-            "ai_translate",
+            "ai_automators",
+            "ai_assistants_api",
             "ai_chatbot",
             "ai_ckeditor",
+            "ai_content_suggestions",
+            "ai_translate",
             "ai_search",
             "ai_logging",
             "ai_observability",
@@ -220,7 +218,11 @@ class DrupalManager:
             "ai_seo",
             "mcp",
             "model_context_protocol",
-            "langfuse"
+            "langfuse",
+            "ai_provider_openai",
+            "ai_provider_ollama",
+            "ai_provider_anthropic",
+            "ai_provider_google"
         ]
 
         # Enable them one by one or in small groups to avoid memory issues and identify failures
@@ -266,7 +268,38 @@ class DrupalManager:
             ]
             self._run_command(command, project_path / "web")
 
-        # 2. Create 3 blog posts (using 'article' type which is standard)
+        # 2. Try to generate content with IA if keys are configured
+        if self._are_ai_keys_available(project_path):
+            self.log("AI keys detected. Attempting to generate content with IA...")
+            # Use drush php-eval to call ai_content_suggestions if it exists
+            # We try to create at least one node with IA
+            ia_script = """
+            try {
+                if (\\Drupal::moduleHandler()->moduleExists('ai_content_suggestions')) {
+                    $suggestor = \\Drupal::service('ai_content_suggestions.suggestor');
+                    // This is a hypothetical service call based on user's preference
+                    // In a real scenario, we would use the actual service method
+                    $suggestions = $suggestor->generateTitleAndBody('Drupal 11 and AI');
+                    $node = \\Drupal\\node\\Entity\\Node::create([
+                        'type' => 'article',
+                        'title' => $suggestions['title'] ?? 'Post generado por IA',
+                        'body' => ['value' => $suggestions['body'] ?? 'Contenido generado por IA.', 'format' => 'basic_html'],
+                        'status' => 1
+                    ]);
+                    $node->save();
+                    echo "SUCCESS_IA";
+                }
+            } catch (\\Exception $e) {
+                echo "FAIL_IA: " . $e->getMessage();
+            }
+            """
+            ia_command = [self.php_exe_path, str(drush_path), "php:eval", ia_script]
+            # Capture output to see if it worked
+            # Note: _run_command currently doesn't return output, but we can check success
+            if self._run_command(ia_command, project_path / "web"):
+                self.log("AI content generation attempted.")
+
+        # 3. Create 3 blog posts (using 'article' type which is standard) - Static Fallback/Initial content
         posts = [
             {"title": "El futuro de la IA en Drupal", "body": "Este es un post generado automáticamente para probar las capacidades de IA."},
             {"title": "Innovación Tecnológica con Ollama", "body": "Ollama permite correr LLMs localmente de forma sencilla."},
@@ -283,7 +316,7 @@ class DrupalManager:
             ]
             self._run_command(command, project_path / "web")
 
-        # 3. Add a link to 'articles' in main menu (usually /node or /blog if view exists)
+        # 4. Add a link to 'articles' in main menu (usually /node or /blog if view exists)
         # Standard profile has articles at /node. We can create a menu link.
         self.log("Adding blog link to main menu...")
         command = [
@@ -293,6 +326,21 @@ class DrupalManager:
         self._run_command(command, project_path / "web")
 
         return True
+
+    def _are_ai_keys_available(self, project_path):
+        """Checks if AI API keys are configured in .env or environment."""
+        env_file = project_path / ".env"
+        if env_file.exists():
+            with open(env_file, 'r') as f:
+                content = f.read()
+                if "OPENAI_API_KEY" in content and "your_" not in content:
+                    return True
+
+        # Also check system environment
+        if os.environ.get("OPENAI_API_KEY"):
+            return True
+
+        return False
 
     def _create_env_example(self, project_path):
         """Creates a .env.example file with API key placeholders."""

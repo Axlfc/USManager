@@ -54,13 +54,16 @@ Para una guía paso a paso detallada en Windows, consulta: [GUIA_DETALLADA_WINDO
 | Módulo | Descripción |
 | :--- | :--- |
 | `ai` | Core del ecosistema de IA en Drupal. |
+| `ai_agents` | Framework para agentes autónomos. |
+| `ai_automators` | Automatización de tareas basada en IA. |
 | `ai_content_suggestions` | Genera títulos, resúmenes y sugerencias de contenido. |
 | `ai_translate` | Traducción automática de entidades y campos. |
-| `ai_media_image` | Generación de imágenes mediante IA (DALL-E, etc.). |
-| `ai_chatbot` | Integración de interfaces de chat en el sitio. |
-| `ai_provider_openai` | Soporte para modelos de OpenAI (GPT-4). |
-| `ai_provider_ollama` | Soporte para LLMs locales vía Ollama. |
-| `mcp` | Soporte para Model Context Protocol. |
+| `ai_media_image` | Generación de imágenes mediante IA. |
+| `ai_chatbot` | Interfaz de chat integrada. |
+| `ai_provider_openai` | Soporte para OpenAI (GPT-4o/o1). |
+| `ai_provider_ollama` | Soporte para LLMs locales (Llama 3, etc.). |
+| `mcp` | Model Context Protocol para herramientas externas. |
+| `langfuse` | Observabilidad y trazabilidad de prompts. |
 
 ---
 

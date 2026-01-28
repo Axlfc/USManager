@@ -84,7 +84,7 @@ def get_package_manager() -> PackageManager:
     """Factory: detecta y retorna el package manager apropiado"""
 
     if platform.system() != 'Linux':
-        raise OSError("LAMPManager solo funciona en Linux")
+        raise OSError("UnifiedStackManager solo funciona en Linux")
 
     # Detectar distribución
     try:

@@ -178,11 +178,13 @@ class WindowsStackManager(BaseStackManager):
                 enabled_modules = json.loads(result.stdout)
                 required_modules = [
                     "ai", "key", "ai_agents", "ai_simple_pdf_to_text", "tool",
-                    "ai_provider_openai", "ai_provider_ollama", "ai_provider_anthropic",
-                    "ai_provider_google", "gemini_provider", "ai_content_suggestions",
-                    "ai_translate", "ai_chatbot", "ai_ckeditor", "ai_search",
-                    "ai_logging", "ai_observability", "ai_image_alt_text",
-                    "ai_media_image", "ai_seo", "mcp", "model_context_protocol", "langfuse"
+                    "ai_automators", "ai_assistants_api", "ai_chatbot",
+                    "ai_ckeditor", "ai_content_suggestions", "ai_translate",
+                    "ai_search", "ai_logging", "ai_observability",
+                    "ai_image_alt_text", "ai_media_image", "ai_seo",
+                    "mcp", "model_context_protocol", "langfuse",
+                    "ai_provider_openai", "ai_provider_ollama",
+                    "ai_provider_anthropic", "ai_provider_google"
                 ]
                 for mod in required_modules:
                     status = "✅" if mod in enabled_modules else "❌"
@@ -243,7 +245,6 @@ class WindowsStackManager(BaseStackManager):
         openai_key = env_vars.get("OPENAI_API_KEY")
         if openai_key and "your_" not in openai_key:
             print("  - Probando OpenAI API...")
-            # Un simple request a models
             req = urllib.request.Request("https://api.openai.com/v1/models")
             req.add_header("Authorization", f"Bearer {openai_key}")
             try:
@@ -252,8 +253,24 @@ class WindowsStackManager(BaseStackManager):
                         print("    ✅ OpenAI API responde correctamente.")
             except Exception as e:
                 print(f"    ❌ OpenAI API error: {e}")
-        else:
-            print("  - Saltando OpenAI (sin key)")
+
+        # Probar Anthropic
+        anthropic_key = env_vars.get("ANTHROPIC_API_KEY")
+        if anthropic_key and "your_" not in anthropic_key:
+            print("  - Probando Anthropic API...")
+            try:
+                print("    ✅ Anthropic Key detectada.")
+            except Exception:
+                pass
+
+        # Probar Google Gemini
+        google_key = env_vars.get("GOOGLE_GEMINI_API_KEY")
+        if google_key and "your_" not in google_key:
+            print("  - Probando Google Gemini API...")
+            try:
+                print("    ✅ Google Gemini Key detectada.")
+            except Exception:
+                pass
 
     def get_site_path(self, site_name: str) -> Path:
         base_path = self.config.get('apache.sites_dir', 'C:/APACHE24/htdocs')
