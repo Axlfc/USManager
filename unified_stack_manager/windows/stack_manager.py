@@ -34,7 +34,7 @@ class WindowsStackManager(BaseStackManager):
             return True
 
         if 'php' in components or 'all' in components:
-            php_version = self.config.get('php.default_version', '8.2')
+            php_version = self.config.get('php.default_version', '8.4')
             print(f"Instalando PHP v{php_version} usando el orquestador legacy...")
             return self.wamp_orchestrator.setup_php_and_apache(php_version)
 

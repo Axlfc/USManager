@@ -23,7 +23,7 @@ class DrupalManager:
         """Finds a suitable PHP installation managed by php_manager.py."""
         self.log("Searching for a valid PHP installation...")
         # Check in common locations managed by php_manager.py, starting with newest
-        for version in ["8.3", "8.2", "8.1", "8.0", "7.4"]:
+        for version in ["8.4", "8.3", "8.2", "8.1", "8.0", "7.4"]:
             php_path = Path(f"C:/php{version}")
             php_exe = php_path / "php.exe"
             composer_phar = php_path / "composer.phar"
@@ -65,9 +65,16 @@ class DrupalManager:
         if not self._install_site(project_path):
             return False
 
+        # Step 4: Enable modules
+        if not self._enable_modules(project_path):
+            return False
+
+        # Step 5: Create .env.example
+        self._create_env_example(project_path)
+
         self.log(f"Successfully created Drupal site: {project_name}", "INFO")
         self.log(f"Site located at: {project_path}", "INFO")
-        self.log(f"Next steps: Configure your API keys in the Drupal admin.", "INFO")
+        self.log(f"Next steps: Configure your API keys in the Drupal admin or using the .env file.", "INFO")
 
         return True
 
@@ -118,20 +125,27 @@ class DrupalManager:
         return self._run_command(command, self.htdocs_path)
 
     def _add_modules(self, project_path):
-        """Adds Drupal AI and Key modules via Composer."""
-        self.log("Adding AI and Key modules...")
+        """Adds Drupal AI and requested modules via Composer."""
+        self.log("Adding AI modules and dependencies...")
 
-        # Add AI module
-        command_ai = [self.php_exe_path, self.composer_path, "require", "drupal/ai"]
-        if not self._run_command(command_ai, project_path):
-            self.log("Failed to add Drupal AI module.", "ERROR")
-            return False
+        modules = [
+            "drupal/ai:^1.3@beta",
+            "drupal/key",
+            "drupal/ai_agents",
+            "drupal/ai_simple_pdf_to_text:^1.0@alpha",
+            "drupal/tool:^1.0@alpha",
+            "drupal/ai_provider_openai",
+            "drupal/ai_provider_ollama",
+            "drupal/gemini_provider",
+            "drupal/ai_provider_anthropic"
+        ]
 
-        # Add Key module (dependency, but good to be explicit)
-        command_key = [self.php_exe_path, self.composer_path, "require", "drupal/key"]
-        if not self._run_command(command_key, project_path):
-            self.log("Failed to add Key module.", "ERROR")
-            return False
+        for module in modules:
+            self.log(f"Requiring module: {module}")
+            command = [self.php_exe_path, self.composer_path, "require", module]
+            if not self._run_command(command, project_path):
+                self.log(f"Failed to add module {module}.", "ERROR")
+                return False
 
         return True
 
@@ -156,18 +170,48 @@ class DrupalManager:
 
     def _enable_modules(self, project_path):
         """Enables the newly added modules."""
-        self.log("Enabling AI and Key modules...")
+        self.log("Enabling AI modules...")
         drush_path = project_path / "vendor" / "bin" / "drush"
+
+        modules = [
+            "ai",
+            "key",
+            "ai_agents",
+            "ai_simple_pdf_to_text",
+            "tool",
+            "ai_provider_openai",
+            "ai_provider_ollama",
+            "gemini_provider",
+            "ai_provider_anthropic"
+        ]
 
         command = [
             self.php_exe_path,
             str(drush_path),
-            "en",  # drush pm:enable
-            "ai",
-            "key",
-            "-y"
-        ]
+            "en"
+        ] + modules + ["-y"]
+
         return self._run_command(command, project_path / "web")
+
+    def _create_env_example(self, project_path):
+        """Creates a .env.example file with API key placeholders."""
+        self.log("Creating .env.example file...")
+        env_content = """# AI API Keys configuration
+# Rename this file to .env and fill in your keys
+# These can be used by the Key module if configured to read from environment variables
+
+OPENAI_API_KEY=your_openai_key_here
+ANTHROPIC_API_KEY=your_anthropic_key_here
+GEMINI_API_KEY=your_gemini_key_here
+OLLAMA_HOST=http://localhost:11434
+"""
+        try:
+            with open(project_path / ".env.example", "w") as f:
+                f.write(env_content)
+            return True
+        except Exception as e:
+            self.log(f"Failed to create .env.example: {e}", "ERROR")
+            return False
 
 
 def main():

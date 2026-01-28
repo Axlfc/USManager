@@ -83,8 +83,8 @@ def install(ctx, components):
 
 @cli.command('create-site')
 @click.argument('site_name')
-@click.option('--php-version', default='8.2', type=click.Choice(['7.4', '8.1', '8.2', '8.3']), help='Versión de PHP')
-@click.option('--drupal-version', default='^10', help='Versión de Drupal (ej: ^10, 10.2.0)')
+@click.option('--php-version', default='8.4', type=click.Choice(['7.4', '8.1', '8.2', '8.3', '8.4']), help='Versión de PHP')
+@click.option('--drupal-version', default='^11', help='Versión de Drupal (ej: ^11, 11.0.0)')
 @click.pass_context
 def create_site(ctx, site_name, php_version, drupal_version):
     """Crear un nuevo sitio Drupal."""
@@ -110,7 +110,7 @@ def list_sites(ctx):
 
 @cli.command('switch-php')
 @click.argument('site_name')
-@click.argument('php_version', type=click.Choice(['7.4', '8.1', '8.2', '8.3']))
+@click.argument('php_version', type=click.Choice(['7.4', '8.1', '8.2', '8.3', '8.4']))
 @click.pass_context
 def switch_php(ctx, site_name, php_version):
     """Cambiar la versión de PHP de un sitio."""
